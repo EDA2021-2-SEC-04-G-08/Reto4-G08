@@ -1,3 +1,8 @@
+Req. 3 - Juana María Morales Ramos – jm.moralesr1@uniandes.edu - 202021591
+
+Req. 4 - Mateo López Tobón - m.lopez24@uniandes.edu.co - 202021416
+
+
 #ISIS1225 - Librerias de soporte
 
 Este proyecto contiene los Tipos abstractos de datos, estructuras de datos y algoritmos requeridos por el curso ISIS1225-Estructuras de Datos y Algoritmos
