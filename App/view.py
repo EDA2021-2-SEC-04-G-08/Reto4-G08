@@ -33,6 +33,9 @@ Presenta el menu de opciones y por cada seleccion
 se hace la solicitud al controlador para ejecutar la
 operación solicitada
 """
+airportsfile = "airports_full.csv"
+routesfile = 'routes_full.csv'
+citiesfile = 'worldcities.csv'
 
 def printMenu():
     print("Bienvenido")
@@ -55,7 +58,12 @@ while True:
     inputs = input('Seleccione una opción para continuar\n')
     if int(inputs[0]) == 1:
         print("Cargando información de los archivos ....")
+        cont = controller.init()
+        
+        controller.loadServices(catalog, airportsfile, routesfile, citiesfile)
 
+        numpuertos = controller.totalConnections(catalog)
+        numrutas = controller.totalStops(catalog)
     elif int(inputs[0]) == 2:
         pass
 
