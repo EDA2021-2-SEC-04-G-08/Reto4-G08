@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU General Public License
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
-
 import config as cf
 import model
 import csv
@@ -29,46 +28,102 @@ import csv
 El controlador se encarga de mediar entre la vista y el modelo.
 """
 
-# Inicialización del Catálogo de libros
-def init():
+#======================================
+# Inicialización del Catálogo
+#======================================
+
+def initCatalog():
     """
-    Llama la funcion de inicializacion  del modelo.
+    Llama la funcion de inicializacion del catalogo del modelo.
     """
-    # analyzer es utilizado para interactuar con el modelo
     analyzer = model.newAnalyzer()
     return analyzer
+
+#==================================
+# Funciones para la carga de datos
+#==================================
+
+def loadData(analyzer):
+    """
+    Carga los datos de los archivos y cargar los datos en la
+    estructura de datos
+    """
+    loadAirports(analyzer)
+    loadRoutes(analyzer)
+    loadCities(analyzer)
+    loadRoutesND(analyzer)
+    return analyzer
+
+def loadAirports(catalog):
+    """
+    Carga los aeropuertos.
+    """
+    booksfile = cf.data_dir + 'Skylines/airports_full.csv'
+    input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    for airport in input_file:
+        model.addAirport(catalog, airport)
     
-def loadServices(analyzer, airportsfile, routesfile, citiesfile):
+def loadRoutes(catalog):
+    """
+    Carga las rutas.
+    """
+    booksfile = cf.data_dir + 'Skylines/routes_full.csv'
+    input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    for route in input_file:
+        model.addRoute(catalog, route)
+
+def loadCities(analyzer):
+    """
+    Carga las ciudades
+    """
+    booksfile = cf.data_dir + 'Skylines/worldcities.csv'
+    input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    for city in input_file:
+        model.addCity(analyzer, city)
+
+def loadRoutesND(catalog):
+    """
+    Carga las rutas.
+    """
+    booksfile = cf.data_dir + 'Skylines/routes_full.csv'
+    input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    for route in input_file:
+        model.addRouteND(catalog, route)
+
+def loadGreen(analyzer, servicesfile):
+    """
+    Carga las rutas bien hecho.
+    """
     servicesfile = cf.data_dir + servicesfile
     input_file = csv.DictReader(open(servicesfile, encoding="utf-8"),
                                 delimiter=",")
-    lastservice = None
-    for service in input_file:
-        if lastservice is not None:
-            sameservice = lastservice['ServiceNo'] == service['ServiceNo']
-            samedirection = lastservice['Direction'] == service['Direction']
-            samebusStop = lastservice['BusStopCode'] == service['BusStopCode']
+    lastflight = None
+    for flight in input_file:
+        if lastflight is not None:
+            sameservice = lastflight['Airline'] == flight['Airline']
+            samedirection = lastflight['Destination'] == flight['Destination']
+            samebusStop = lastflight['Departure'] == flight['Departure']
             if sameservice and samedirection and not samebusStop:
-                model.addStopConnection(analyzer, lastservice, service)
-        lastservice = service
-    model.addRouteConnections(analyzer)
+                model.addAirportConnection(analyzer, lastflight, flight)
+        lastflight = flight
     return analyzer
 
 
-# Funciones para la carga de datos
+#========================================================
+# Requerimientos
+#========================================================
 
-# Funciones de ordenamiento
+def Requerimiento1(analyzer):
+    return model.Requerimiento1(analyzer)
 
-# Funciones de consulta sobre el catálogo
-def totalStops(analyzer):
-    """
-    Total de paradas de autobus
-    """
-    return model.totalStops(analyzer)
+def Requerimiento2(analyzer, IATA1, IATA2):
+    return model.clusterAirports(analyzer, IATA1, IATA2)
 
+def Requerimiento3(analyzer,origen,destino):
+    return model.Requerimiento3(analyzer,origen,destino)
 
-def totalConnections(analyzer):
-    """
-    Total de enlaces entre las paradas
-    """
-    return model.totalConnections(analyzer)
+def Requerimiento4(analyzer, origen, millas):
+    return model.lifeMiles(analyzer, origen, millas)
+
+def Requerimiento5(analyzer,aeropuerto):
+    return model.Requerimiento5(analyzer,aeropuerto)
