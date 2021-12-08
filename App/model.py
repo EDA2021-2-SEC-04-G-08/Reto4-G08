@@ -86,7 +86,6 @@ def contar_ciudades(map):
         total+=lt.size(i)
     return total
 
-
 def addAirport(analyzer,airport):
     """
     Adiciona un aeropuerto al map aeropuertos y, como vertice, al grafo red
@@ -194,11 +193,13 @@ def compara_mapa(elemento1,elemento2):
 #======================================================================
 # Requerimientos
 #======================================================================
+# Requerimiento 1 
+#======================================================================
 
 def Requerimiento1(analyzer):
     grafo = analyzer['red']
-    aeropuertos = gr.vertices(grafo)
-    conexiones = lt.newList("ARRAY_LIST")
+    aeropuertos = gr.vertices(grafo) #n
+    conexiones = lt.newList("ARRAY_LIST") 
     for aeropuerto in lt.iterator(aeropuertos):
         numero_entran = gr.indegree(grafo,aeropuerto)
         numero_salen=gr.outdegree(grafo,aeropuerto)
@@ -209,13 +210,12 @@ def Requerimiento1(analyzer):
             lt.addLast(conexiones,guardar)
     conexiones=ms.sort(conexiones,ordenDescendente)
     return conexiones
+#complejidad req 1: nlog(n)+8n
 
 
-
-
-
-
-#Req 2#
+#======================================================================
+# Requerimiento 2 
+#======================================================================
 
 def clusterAirports(analyzer, IATA1, IATA2):
     """
@@ -226,7 +226,10 @@ def clusterAirports(analyzer, IATA1, IATA2):
     total = scc.connectedComponents(analyzer["components"])
     return verificación, total
 
-#Req 3
+#======================================================================
+# Requerimiento 3
+#======================================================================
+
 def haversine(lon1, lat1, lon2, lat2):
     """
     Calculate the great circle distance in kilometers between two points 
@@ -400,7 +403,10 @@ def Requerimiento3(analyzer,origen,destino):
     lt.addLast(resultado,dt_d)
     return resultado
 
-#Requerimiento 4#
+#======================================================================
+# Requerimiento 4
+#======================================================================
+
 def aeroCercanoX(analyzer,ciudad):
     aeropuertos=analyzer["aeropuertos"]
     lat=float(ciudad["lat"])
@@ -420,12 +426,12 @@ def aeroCercanoX(analyzer,ciudad):
     return aeropuerto
 
 def lifeMiles(analyzer, origen, millas):
-    mst=prim.PrimMST(analyzer["blue"])
-    arcos=prim.edgesMST(analyzer["blue"],mst)["mst"]
-    aeroCercano=aeroCercanoX(analyzer,origen)
+    mst=prim.PrimMST(analyzer["blue"]) #n(cant vert)2
+    arcos=prim.edgesMST(analyzer["blue"],mst)["mst"] #e(cant arc)
+    aeroCercano=aeroCercanoX(analyzer,origen) #n
     grafo= gr.newGraph(datastructure='ADJ_LIST',directed=False,size=14000,comparefunction=compara_mapa)
 
-    for i in lt.iterator(arcos):
+    for i in lt.iterator(arcos): 
         VerticeA=i["vertexA"]
         VerticeB=i["vertexB"]
         if(not gr.containsVertex(grafo,VerticeA)):
@@ -433,9 +439,9 @@ def lifeMiles(analyzer, origen, millas):
         if(not gr.containsVertex(grafo,VerticeB)):
             gr.insertVertex(grafo,VerticeB)
         gr.addEdge(grafo,VerticeA,VerticeB,i["weight"])
-    print(gr.numVertices(grafo))
+    #e
     km=millas*1.60
-    DFS,info=DepthFirstSearch(grafo,aeroCercano["IATA"])
+    DFS,info=DepthFirstSearch(grafo,aeroCercano["IATA"]) #n
     total=info["costo_Total"]*2
     dicts={"falto":0,"sobro":0,"igual":False}
     if(total >km):
@@ -446,19 +452,6 @@ def lifeMiles(analyzer, origen, millas):
         dicts["igual"]=True
 
     return info["arcos"],info["num_visitados"],dicts,total/2,aeroCercano
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
 
 def DepthFirstSearch(graph, source):
     search = {'source': source,
@@ -499,19 +492,9 @@ def comparaLista(el1,el2):
     else:
         return -1
     
-
-
-
-
-
-    
-
-
-
-
-    
-
-#Requerimiento 5#
+#======================================================================
+# Requerimiento 5
+#======================================================================
 
 def Requerimiento5(analyzer,aeropuerto):
     grafo = analyzer['red']
