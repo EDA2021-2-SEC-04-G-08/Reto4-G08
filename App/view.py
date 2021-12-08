@@ -20,6 +20,7 @@
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
 
+import prettytable
 import config as cf
 import sys
 import controller
@@ -31,6 +32,7 @@ from DISClib.DataStructures import mapentry as me
 assert cf
 import time
 import threading
+from prettytable import PrettyTable as pt
 
 """
 La vista se encarga de la interacción con el usuario
@@ -44,6 +46,7 @@ operación solicitada
 def printMenu():
     print("*******************************************")
     print("Bienvenido")
+    print("0- Crear catálogo vacio")
     print("1- Cargar información en el catálogo")
     print("2- Encontrar puntos de interconexión aérea ")
     print("3- Encontrar clústeres de tráfico aéreo ")
@@ -51,7 +54,7 @@ def printMenu():
     print("5- Utilizar las millas de viajero ")
     print("6- Cuantificar el efecto de un aeropuerto cerrado ")
     print("7- Comparar con servicio WEB externo ")
-    print("0- Salir")
+    print("8- Salir")
     print("*******************************************")
 
 def loadData(analyzer):
@@ -66,10 +69,11 @@ analyzer = None
 def printDataReq1(datos):
     size = lt.size(datos)
     if size>0:
-        for dato in lt.iterator(datos):
-            if dato is not None:
-                print('IATA: ' + dato['IATA'] + ', Nombre: ' + dato['Name']
-                     + ', Ciudad: ' + dato['City'] + ', Pais: ' + dato['Country']) 
+        tabla=pt()
+        tabla.field_names=["Name","City","Country","IATA","Connections","Inbound","Outbound"]
+        for tupla in lt.iterator(datos):
+            tabla.add_row([tupla[0]["Name"],tupla[0]["City"],tupla[0]["Country"],tupla[0]["IATA"],str(tupla[3]),str(tupla[1]),str(tupla[2])])
+        print(tabla)
     else:   
         print ("No se encontraron datos")
 
@@ -102,6 +106,7 @@ def PrintCargaDatos(analyzer):
     print("Total de aeropuertos: " + str(gr.numVertices(analyzer['blue'])))
     print("Total de rutas: " + str(gr.numEdges(analyzer['blue'])))
     print("-" * 50)
+    #EL TOTAL DE CIUDADES ESTÁ MAL, TIENE QUE CONTAR EN CADA CIUDAD CUÁNTOS TIENE CADA CIUDAD.
     print("Total de ciudades: "+  str(mp.size(analyzer["ciudades"])))
     print("-" * 50)
     print("Primer Aeropuerto Cargado: ")
@@ -118,9 +123,7 @@ def cargaDatos(analyzer):
 
 def Requerimiento1(analyzer):
     aeropuertos = controller.Requerimiento1(analyzer)
-    interconexiones = lt.removeLast(aeropuertos)
     printDataReq1(aeropuertos)
-    print('Número de aeropuertos interconectados: ' + str(interconexiones))
     print("-" * 50)
     return None
 
@@ -167,16 +170,39 @@ def Requerimiento3(analyzer,origen,destino):
     return None
 
 def Requerimiento4(analyzer):
-    origen = "bogota"
+    origen = "Saint Petersburg"
     millas = 10291
-    llaves = controller.Requerimiento4(analyzer, origen, millas)
-    x = 0
-    for llave in lt.iterator(llaves):
-        print(llave)
-        if x == 10:
-            break
-        x+= 1
-    return None
+    ciudades=me.getValue(mp.get(analyzer["ciudades"],origen))
+    tabla=pt()
+    tabla.field_names=["Elección","city","lat","lng","country","capital"]
+    i=1
+    for tupla in lt.iterator(ciudades):
+        tabla.add_row([i,tupla["city"],tupla["lat"],tupla["lng"],tupla["country"],tupla["capital"]])
+        i+=1
+    print(tabla)
+    elección=int(input("Digite el número de la ciudad:"))
+    ciudad=lt.getElement(ciudades,elección)
+    RamaMasLarga,numVertices,dicts,costo_total_mst = controller.Requerimiento4(analyzer,ciudad, millas)
+    print("El número de nodos conectados en el MST es:",numVertices)
+    print("El costo total del MST partiendo desde:",ciudad["city"],"es:",costo_total_mst)
+    print("La rama más larga consiste en :")
+    tabla=pt()
+    tabla.field_names=["Departure","Destination","distance_km"]
+    for i in lt.iterator(RamaMasLarga):
+         tabla.add_row([i["vertexA"],i["vertexB"],i["weight"]])
+    print(tabla)
+    if(dicts["falto"]>0):
+        print("Faltó una cantidad de:",dicts["falto"]/1.60,"millas para conectar más ciudades")
+    elif(dicts["sobro"]>0):
+        print("Sobró una cantidad de:",dicts["sobro"]/1.60,"millas")
+    else:
+        print("Se alcanzaron todas los vértices")
+
+    
+
+    
+    
+    
 
 def Requerimiento5(analyzer,aeropuerto):
     resultado = controller.Requerimiento5(analyzer,aeropuerto)
@@ -195,11 +221,11 @@ def thread_cycle():
         printMenu()
         inputs = input('Seleccione una opción para continuar\n')
 
-        if int(inputs[0]) == 1:
+        if int(inputs[0]) == 0:
             print("\nInicializando....")
             analyzer = controller.initCatalog()
 
-        elif int(inputs[0]) == 2:
+        elif int(inputs[0]) == 1:
             print("\nCargando información de transporte aereo ....")
             start_time = time.process_time()
             cargaDatos(analyzer)
@@ -207,15 +233,14 @@ def thread_cycle():
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
             PrintCargaDatos(analyzer)
-
-        elif int(inputs[0]) == 3:
+        elif int(inputs[0]) == 2:
             start_time = time.process_time()
             Requerimiento1(analyzer)
             stop_time = time.process_time()
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
 
-        elif int(inputs[0]) == 4:
+        elif int(inputs[0]) == 3:
             Aero_1 = input("Ingrese el Codigo IATA del primer Aeropuerto: ")
             Aero_2 = input("Ingrese el Codigo IATA del segundo Aeropuerto: ")
             start_time = time.process_time()
@@ -224,7 +249,7 @@ def thread_cycle():
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
         
-        elif int(inputs[0]) == 5:
+        elif int(inputs[0]) == 4:
             origen = input('Ciudad de origen: ')
             destino = input('Ciudad de destino: ' )
             start_time = time.process_time()
@@ -233,14 +258,14 @@ def thread_cycle():
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
         
-        elif int(inputs[0]) == 6:
+        elif int(inputs[0]) == 5:
             start_time = time.process_time()
             Requerimiento4(analyzer)
             stop_time = time.process_time()
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
 
-        elif int(inputs[0]) == 7:
+        elif int(inputs[0]) == 6:
             aeropuerto = input('Ingrese el IATA del aeropuerto fuera de funcionamiento: ')
             start_time = time.process_time()
             Requerimiento5(analyzer,aeropuerto)
@@ -253,6 +278,6 @@ def thread_cycle():
 
 if __name__ == "__main__":
     threading.stack_size(67108864)  # 64MB stack
-    sys.setrecursionlimit(2 ** 30)
+    sys.setrecursionlimit(10000)
     thread = threading.Thread(target=thread_cycle)
     thread.start()
