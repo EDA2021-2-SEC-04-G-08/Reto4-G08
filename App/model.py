@@ -80,6 +80,11 @@ def newAnalyzer():
     return analyzer
 
 #======================================================================
+def contar_ciudades(map):
+    total=0
+    for i in lt.iterator(mp.valueSet(map)):
+        total+=lt.size(i)
+    return total
 
 
 def addAirport(analyzer,airport):
@@ -92,6 +97,8 @@ def addAirport(analyzer,airport):
     mp.put(analyzer['aeropuertos'],iata,airport)
     if not gr.containsVertex(analyzer['red'], iata):
             gr.insertVertex(analyzer['red'], iata)
+    if not gr.containsVertex(analyzer['blue'], iata):
+            gr.insertVertex(analyzer['blue'], iata)
     # ordered map latlng
     ordmap = analyzer['latlng']
     lat = float(airport['Latitude'])
@@ -124,6 +131,7 @@ def addRoute(analyzer, route):
     destination = route['Destination']
     distance = route['distance_km']
     gr.addEdge(analyzer['red'], origin, destination, float(distance))
+    
     
 
 def addCity(analyzer, city):
@@ -161,10 +169,6 @@ def addRouteND(analyzer, route):
     if(gr.containsVertex(blue,origin) and gr.containsVertex(blue,destination)):
         edge2 = gr.getEdge(blue, origin,destination)
     if edge is not None and edge2==None:
-        if gr.containsVertex(analyzer["blue"], destination) is False:
-            gr.insertVertex(analyzer["blue"], destination)
-        if gr.containsVertex(analyzer["blue"], origin) is False:
-            gr.insertVertex(analyzer["blue"], origin)
         gr.addEdge(analyzer["blue"], destination, origin, distance)
     return analyzer
 def buscarAeropuerto(catalog,IATA):
@@ -209,9 +213,7 @@ def Requerimiento1(analyzer):
 
 
 
-    
-    
-    return resultado
+
 
 #Req 2#
 
@@ -431,35 +433,10 @@ def lifeMiles(analyzer, origen, millas):
         if(not gr.containsVertex(grafo,VerticeB)):
             gr.insertVertex(grafo,VerticeB)
         gr.addEdge(grafo,VerticeA,VerticeB,i["weight"])
+    print(gr.numVertices(grafo))
     km=millas*1.60
-    DFS,info=DepthFirstSearch(grafo,aeroCercano["IATA"],km)
-    rutaCompleta=None
-    cantidad=0
-    for i in lt.iterator(info["verticesVisitables"]):
-        camino=dfs.pathTo(DFS,i)
-        ruta=lt.newList("ARRAY_LIST")
-        while stk.size(camino)>0:
-            vertex=stk.pop(camino)
-            lt.addLast(ruta,vertex)
-        if(lt.size(ruta)>=cantidad):
-            cantidad=lt.size(ruta)
-            rutaCompleta=ruta
-    
-    costo_total_mst=0
-    arcos_útiles=lt.newList("ARRAY_LIST")
-    for i in lt.iterator(arcos):
-        if(lt.isPresent(info["verticesVisitables"],i["vertexA"])!=0 and lt.isPresent(info["verticesVisitables"],i["vertexB"])!=0):
-            costo_total_mst+=i["weight"]
-            lt.addLast(arcos_útiles,i)
-
-    RamaMasLarga=lt.newList("ARRAY_LIST")
-    total=0
-    for i in range(2,lt.size(rutaCompleta)+1,1):
-        inicio=lt.getElement(rutaCompleta,i-1)
-        final=lt.getElement(rutaCompleta,i)
-        arco=gr.getEdge(grafo,inicio,final)
-        lt.addLast(RamaMasLarga,arco)
-        total+=arco["weight"]
+    DFS,info=DepthFirstSearch(grafo,aeroCercano["IATA"])
+    total=info["costo_Total"]*2
     dicts={"falto":0,"sobro":0,"igual":False}
     if(total >km):
         dicts["falto"]=total-km
@@ -468,7 +445,7 @@ def lifeMiles(analyzer, origen, millas):
     else:
         dicts["igual"]=True
 
-    return RamaMasLarga,lt.size(info["verticesVisitables"]),dicts,costo_total_mst
+    return info["arcos"],info["num_visitados"],dicts,total/2,aeroCercano
     
     
     
@@ -483,7 +460,7 @@ def lifeMiles(analyzer, origen, millas):
 
 
 
-def DepthFirstSearch(graph, source,limite):
+def DepthFirstSearch(graph, source):
     search = {'source': source,
               'visited': None}
     search['visited'] = mp.newMap(numelements=gr.numVertices(graph),
@@ -492,35 +469,25 @@ def DepthFirstSearch(graph, source,limite):
                                        )
     mp.put(search['visited'], source, {'marked': True, 'edgeTo': None})
     #Estructura para poder saber el límite de vertices que se pueden visitar con los kilómetros de límite.
-    limite={"actual":0,"limite":limite,"verticesMaximos":lt.newList("ARRAY_LIST",cmpfunction=comparaLista),"verticesVisitables":lt.newList("ARRAY_LIST",cmpfunction=comparaLista)}
+    visitables={"arcos":lt.newList("ARRAY_LIST",cmpfunction=comparaLista),"costo_Total":0,"num_visitados":0}
+    visitables["num_visitados"]+=1
     #Se agregan los vértices de inicio a la estructura
-    lt.addLast(limite["verticesMaximos"],source)
-    lt.addLast(limite["verticesVisitables"],source)
-    dfsVertex(search, graph, source,limite)
-    return search,limite
-def dfsVertex(search, graph, vertex,limite):
+    dfsVertex(search, graph, source,visitables)
+    return search,visitables
+def dfsVertex(search, graph, vertex,visitables):
     #Se ordena la lista de adyacentes a vertex(inicial) para saber cuál es el más barato para comenzar.
     adjlst = gr.adjacents(graph, vertex)
-    adjlst2=lt.newList("ARRAY_LIST")
-    for i in lt.iterator(adjlst):
-        peso=gr.getEdge(graph,vertex,i)["weight"]
-        tuple=(i,peso)
-        lt.addLast(adjlst2,tuple)
-    adjlst2=ms.sort(adjlst2,compare_Vertex)
-    adjlst=lt.newList("ARRAY_LIST")
-    for i in lt.iterator(adjlst2):
-        lt.addLast(adjlst,i[0])
     #Comienza DFS
     for w in lt.iterator(adjlst):
         visited = mp.get(search['visited'], w)
         if visited is None:
             mp.put(search['visited'],
                     w, {'marked': True, 'edgeTo': vertex})
-            limite["actual"]+=gr.getEdge(graph,vertex,w)["weight"]*2
-            if(limite["actual"]<=limite["limite"]):
-                lt.addLast(limite["verticesMaximos"],w)
-            lt.addLast(limite["verticesVisitables"],w)
-            dfsVertex(search, graph, w,limite)
+            arco=gr.getEdge(graph,vertex,w)
+            lt.addLast(visitables["arcos"],arco)
+            visitables["costo_Total"]+=arco["weight"]
+            visitables["num_visitados"]+=1
+            dfsVertex(search, graph, w,visitables)
 
 def compare_Vertex(ver1,ver2):
     return ver1[1]<=ver2[1]

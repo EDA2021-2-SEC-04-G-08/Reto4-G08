@@ -359,6 +359,7 @@ def adjacents(graph, vertex):
         Exception
     """
     try:
+        
         element = map.get(graph['vertices'], vertex)
         lst = element['value']
         lstresp = lt.newList()

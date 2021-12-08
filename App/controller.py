@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along withthis program.  If not, see <http://www.gnu.org/licenses/>.
  """
+from DISClib.Algorithms.Graphs.prim import prim
 import config as cf
 import model
 import csv
@@ -48,11 +49,11 @@ def loadData(analyzer):
     Carga los datos de los archivos y cargar los datos en la
     estructura de datos
     """
-    loadAirports(analyzer)
+    primeroAero,ultimoAero=loadAirports(analyzer)
     loadRoutes(analyzer)
-    loadCities(analyzer)
+    primeroCiudad,UltimoCiudad=loadCities(analyzer)
     loadRoutesND(analyzer)
-    return analyzer
+    return analyzer,primeroAero,ultimoAero,primeroCiudad,UltimoCiudad
 
 def loadAirports(catalog):
     """
@@ -60,8 +61,15 @@ def loadAirports(catalog):
     """
     booksfile = cf.data_dir + 'Skylines/airports-utf8-small.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    x=0
+    primera=""
     for airport in input_file:
         model.addAirport(catalog, airport)
+        if(x==0):
+            primera=airport
+        x+=1
+    ultimo=airport
+    return primera,ultimo
     
 def loadRoutes(catalog):
     """
@@ -70,7 +78,10 @@ def loadRoutes(catalog):
     booksfile = cf.data_dir + 'Skylines/routes-utf8-small.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     for route in input_file:
-        model.addRoute(catalog, route)
+        primero=model.addRoute(catalog, route)
+    return
+    
+    
 
 def loadCities(analyzer):
     """
@@ -78,8 +89,15 @@ def loadCities(analyzer):
     """
     booksfile = cf.data_dir +'Skylines/worldcities.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
+    x=0
+    primero=""
     for city in input_file:
         model.addCity(analyzer, city)
+        if(x==0):
+            primero=city
+        x+=1
+    ultimo=city
+    return primero,ultimo        
 
 def loadRoutesND(catalog):
     """
@@ -107,7 +125,8 @@ def loadGreen(analyzer, servicesfile):
                 model.addAirportConnection(analyzer, lastflight, flight)
         lastflight = flight
     return analyzer
-
+def contar_ciudades(map):
+    return model.contar_ciudades(map)
 
 #========================================================
 # Requerimientos

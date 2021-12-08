@@ -94,7 +94,7 @@ def printFirst(analyzer, indice):
         valor = lt.removeLast(valor)
         print("Nombre: " + valor["city_ascii"] + " Latitud: " + valor["lat"] + " Longitud: " + valor["lng"] 
                                                                     + " Población: " + valor["population"])
-def PrintCargaDatos(analyzer):
+def PrintCargaDatos(analyzer,primeroAero,ultimoAero,primeroCiudad,UltimoCiudad):
     print("-" * 50)
     print("Información Grafo Dirigido")
     print("-" * 50)
@@ -106,14 +106,24 @@ def PrintCargaDatos(analyzer):
     print("Total de aeropuertos: " + str(gr.numVertices(analyzer['blue'])))
     print("Total de rutas: " + str(gr.numEdges(analyzer['blue'])))
     print("-" * 50)
-    #EL TOTAL DE CIUDADES ESTÁ MAL, TIENE QUE CONTAR EN CADA CIUDAD CUÁNTOS TIENE CADA CIUDAD.
-    print("Total de ciudades: "+  str(mp.size(analyzer["ciudades"])))
+    
+    c=controller.contar_ciudades(analyzer["ciudades"])
+    print("Total de ciudades: "+  str(c))
+    
     print("-" * 50)
-    print("Primer Aeropuerto Cargado: ")
-    printFirst(analyzer, "aeropuertos")
+    print("Primer Aeropuerto Cargado y último aeropuerto cargado: ")
+    tabla=pt()
+    tabla.field_names=["Name","City","Country","IATA"]
+    tabla.add_row([primeroAero["Name"],primeroAero["City"],primeroAero["Country"],primeroAero["IATA"]])
+    tabla.add_row([ultimoAero["Name"],ultimoAero["City"],ultimoAero["Country"],ultimoAero["IATA"]])
+    print(tabla)
     print("-" * 50)
-    print("Primera Ciudad Cargado: ")
-    printFirst(analyzer, "ciudades")
+    print("Primera y última Ciudad Cargada: ")
+    tabla=pt()
+    tabla.field_names=["city","lat","lng","country","admin_name","capital","population","id"]
+    tabla.add_row([primeroCiudad["city"],primeroCiudad["lat"],primeroCiudad["lng"],primeroCiudad["country"],primeroCiudad["admin_name"],primeroCiudad["capital"],primeroCiudad["population"],primeroCiudad["id"]])
+    tabla.add_row([UltimoCiudad["city"],UltimoCiudad["lat"],UltimoCiudad["lng"],UltimoCiudad["country"],UltimoCiudad["admin_name"],UltimoCiudad["capital"],UltimoCiudad["population"],UltimoCiudad["id"]])
+    print(tabla)
     print("-" * 50 +"\n")
 
 #=================================================================================
@@ -170,8 +180,8 @@ def Requerimiento3(analyzer,origen,destino):
     return None
 
 def Requerimiento4(analyzer):
-    origen = "Saint Petersburg"
-    millas = 10291
+    origen = input("Elija su ciudad de origen: ")
+    millas = float(input("Ingrese sus millas disponibles: "))
     ciudades=me.getValue(mp.get(analyzer["ciudades"],origen))
     tabla=pt()
     tabla.field_names=["Elección","city","lat","lng","country","capital"]
@@ -182,7 +192,12 @@ def Requerimiento4(analyzer):
     print(tabla)
     elección=int(input("Digite el número de la ciudad:"))
     ciudad=lt.getElement(ciudades,elección)
-    RamaMasLarga,numVertices,dicts,costo_total_mst = controller.Requerimiento4(analyzer,ciudad, millas)
+    RamaMasLarga,numVertices,dicts,costo_total_mst,aero = controller.Requerimiento4(analyzer,ciudad, millas)
+    print("El Aeropuerto de salida es:")
+    tabla=pt()
+    tabla.field_names=["Name","City","Country","IATA"]
+    tabla.add_row([aero["Name"],aero["City"],aero["Country"],aero["IATA"]])
+    print(tabla)
     print("El número de nodos conectados en el MST es:",numVertices)
     print("El costo total del MST partiendo desde:",ciudad["city"],"es:",costo_total_mst)
     print("La rama más larga consiste en :")
@@ -197,7 +212,7 @@ def Requerimiento4(analyzer):
         print("Sobró una cantidad de:",dicts["sobro"]/1.60,"millas")
     else:
         print("Se alcanzaron todas los vértices")
-
+    
     
 
     
@@ -228,11 +243,11 @@ def thread_cycle():
         elif int(inputs[0]) == 1:
             print("\nCargando información de transporte aereo ....")
             start_time = time.process_time()
-            cargaDatos(analyzer)
+            analyzer,primeroAero,ultimoAero,primeroCiudad,UltimoCiudad=cargaDatos(analyzer)
             stop_time = time.process_time()
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
-            PrintCargaDatos(analyzer)
+            PrintCargaDatos(analyzer,primeroAero,ultimoAero,primeroCiudad,UltimoCiudad)
         elif int(inputs[0]) == 2:
             start_time = time.process_time()
             Requerimiento1(analyzer)
