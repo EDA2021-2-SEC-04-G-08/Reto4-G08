@@ -210,7 +210,7 @@ def Requerimiento1(analyzer):
             lt.addLast(conexiones,guardar)
     conexiones=ms.sort(conexiones,ordenDescendente)
     return conexiones
-#complejidad req 1: nlog(n)+8n
+# complejidad req 1: nlog(n)+8n
 
 
 #======================================================================

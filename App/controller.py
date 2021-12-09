@@ -59,7 +59,7 @@ def loadAirports(catalog):
     """
     Carga los aeropuertos.
     """
-    booksfile = cf.data_dir + 'Skylines/airports-utf8-small.csv'
+    booksfile = cf.data_dir + 'Skylines/airports_full.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     x=0
     primera=""
@@ -75,7 +75,7 @@ def loadRoutes(catalog):
     """
     Carga las rutas.
     """
-    booksfile = cf.data_dir + 'Skylines/routes-utf8-small.csv'
+    booksfile = cf.data_dir + 'Skylines/routes_full.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     for route in input_file:
         primero=model.addRoute(catalog, route)
@@ -103,7 +103,7 @@ def loadRoutesND(catalog):
     """
     Carga las rutas.
     """
-    booksfile = cf.data_dir + 'Skylines/routes-utf8-small.csv'
+    booksfile = cf.data_dir + 'Skylines/routes_full.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     for route in input_file:
         model.addRouteND(catalog, route)
