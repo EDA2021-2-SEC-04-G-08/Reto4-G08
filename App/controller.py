@@ -103,7 +103,7 @@ def loadCities(analyzer):
 
 def loadRoutesND(catalog):
     """
-    Carga las rutas.
+    Carga las rutas.,
     """
     booksfile = cf.data_dir + 'Skylines/routes-utf8-small.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
