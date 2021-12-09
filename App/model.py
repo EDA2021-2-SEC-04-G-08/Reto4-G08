@@ -25,10 +25,9 @@
  """
 
 
-
+from DISClib.DataStructures.arraylist import addLast
 import config
 from DISClib.ADT.graph import gr
-from DISClib.ADT import stack as stk 
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
 from DISClib.ADT import orderedmap as om
@@ -37,9 +36,11 @@ from DISClib.Algorithms.Graphs import scc
 from DISClib.Algorithms.Sorting import mergesort as ms
 from DISClib.Algorithms.Graphs import dfs
 from DISClib.Algorithms.Graphs import dijsktra as djk
-from DISClib.Algorithms.Graphs import prim 
+from DISClib.Algorithms.Graphs import prim
+from DISClib.ADT import queue as q
+from DISClib.ADT import stack as st
 assert config
-from math import dist, radians, cos, sin, asin, sqrt
+from math import radians, cos, sin, asin, sqrt
 
 """
 En este archivo definimos los TADs que vamos a usar y las operaciones
@@ -65,15 +66,15 @@ def newAnalyzer():
     analyzer['red'] = gr.newGraph(datastructure='ADJ_LIST',
                                               directed=True,
                                               size=14000,
-                                              comparefunction=compara_mapa)
+                                              comparefunction=None)
     analyzer['blue'] = gr.newGraph(datastructure='ADJ_LIST',
                                               directed=False,
                                               size=14000,
-                                              comparefunction=compara_mapa)                                       
-    analyzer['aeropuertos'] = mp.newMap(comparefunction=compara_mapa)
-    analyzer['ciudades'] = mp.newMap(comparefunction=compara_mapa)
+                                              comparefunction=None)                                       
+    analyzer['aeropuertos'] = mp.newMap()
+    analyzer['ciudades'] = mp.newMap()
     # mapa homonimos req3
-    analyzer['ciudades_id'] = mp.newMap(comparefunction=compara_mapa)
+    analyzer['ciudades_id'] = mp.newMap()
     # mapa ordenado req3
     analyzer['latlng'] = om.newMap() 
 
@@ -129,8 +130,10 @@ def addRoute(analyzer, route):
     origin = route['Departure']
     destination = route['Destination']
     distance = route['distance_km']
-    gr.addEdge(analyzer['red'], origin, destination, float(distance))
-    
+    edge = gr.getEdge(analyzer['red'], origin, destination)
+    if edge is None:
+        gr.addEdge(analyzer['red'], origin, destination, float(distance))
+    return analyzer
     
 
 def addCity(analyzer, city):
@@ -162,14 +165,15 @@ def addRouteND(analyzer, route):
     destination = route['Destination']
     distance = float(route['distance_km'])
     red = analyzer["red"]
-    blue= analyzer["blue"]
     edge = gr.getEdge(red, destination, origin)
-    edge2=None
-    if(gr.containsVertex(blue,origin) and gr.containsVertex(blue,destination)):
-        edge2 = gr.getEdge(blue, origin,destination)
-    if edge is not None and edge2==None:
+    if edge is not None:
+        if gr.containsVertex(analyzer["blue"], destination) is False:
+            gr.insertVertex(analyzer["blue"], destination)
+        if gr.containsVertex(analyzer["blue"], origin) is False:
+            gr.insertVertex(analyzer["blue"], origin)
         gr.addEdge(analyzer["blue"], destination, origin, distance)
     return analyzer
+
 def buscarAeropuerto(catalog,IATA):
     return me.getValue(mp.get(catalog["aeropuertos"],IATA))
 #======================================================================
@@ -180,8 +184,10 @@ def ordenAscendenteD(a,b):
     if (a > b):
         return 0
     return -1
+
 def ordenDescendente(a,b):
     return a[3]>b[3]
+
 def compara_mapa(elemento1,elemento2):
     llave2=me.getKey(elemento2)
     if (elemento1 == llave2):
@@ -190,8 +196,7 @@ def compara_mapa(elemento1,elemento2):
         return 1
     else:
         return -1
-#======================================================================
-# Requerimientos
+
 #======================================================================
 # Requerimiento 1 
 #======================================================================
@@ -266,14 +271,14 @@ def homonimos(lista_o,lista_d):
     return ids
 
 def Requerimiento3(analyzer,origen,destino):
-    # hallamos las ciudades por su nombre
+    # Ciudades por nombre
     ciudades = analyzer['ciudades']
     aeropuertos_ord = analyzer['latlng']
     origin = mp.get(ciudades,origen)
     lista_o = me.getValue(origin)
     destination = mp.get(ciudades,destino)
     lista_d = me.getValue(destination)
-    # miramos si hay homonimos
+    # Hay homonimos?
     if (lt.size(lista_o)>1) or (lt.size(lista_d)>1):
         ids = homonimos(lista_o,lista_d)
         id_o = lt.removeFirst(ids)
@@ -286,14 +291,14 @@ def Requerimiento3(analyzer,origen,destino):
     else:
         o = lt.removeLast(lista_o)
         d = lt.removeLast(lista_d)
-    # calculamos aeropuertos cercanos a las ciudades de origen y destino
+    # Calcular aeropuertos cercanos a las ciudades de origen y destino
     aeropuertos_origen = lt.newList()
     aeropuertos_destino = lt.newList()
     o_lat = float(o['lat'])
     o_lng = float(o['lng'])
     d_lat = float(d['lat'])
     d_lng = float(d['lng'])
-    # llenar lista aeropuertos_origen
+    # Llenar lista aeropuertos_origen
     olat_1 = o_lat-1
     olat_2 = o_lat+1
     olng_1 = o_lng-1
@@ -306,9 +311,9 @@ def Requerimiento3(analyzer,origen,destino):
             i = 0
             while i<tamano:
                 e = lt.removeLast(lista)
-                lt.addLast(aeropuertos_origen,e)
+                lt.addLast(aeropuertos_origen,e)    
                 i += 1
-    # llenar lista aeropuertos_destino
+    # Llenar lista aeropuertos_destino
     dlat_1 = d_lat-1
     dlat_2 = d_lat+1
     dlng_1 = d_lng-1
@@ -323,7 +328,7 @@ def Requerimiento3(analyzer,origen,destino):
                 el = lt.removeLast(lista2)
                 lt.addLast(aeropuertos_destino,el)
                 j += 1
-    # hallar el aeropuerto mas cercano al origen
+    # Hallar el aeropuerto mas cercano al origen
     distancias_o = lt.newList()
     for a_o in lt.iterator(aeropuertos_origen):
         latitud = float(a_o['Latitude'])
@@ -339,7 +344,7 @@ def Requerimiento3(analyzer,origen,destino):
         if d_o == dist_o:
             aero_o = a_o
             break
-    # hallar el aeropuerto mas cercano al destino
+    # Hallar el aeropuerto mas cercano al destino
     distancias_d = lt.newList()
     for a_d in lt.iterator(aeropuertos_destino):
         latitud_d = float(a_d['Latitude'])
@@ -355,7 +360,7 @@ def Requerimiento3(analyzer,origen,destino):
         if d_d == dist_d:
             aero_d = a_d
             break
-    # ver si existe ruta entre el aeropuerto de origen y el aeropuerto de destino mas cercanos a las ciudades
+    # Ver si existe ruta entre el aeropuerto de origen y el aeropuerto de destino mas cercanos a las ciudades
     # De ser necesario, iterar cambiando los aeropuertos por aeropuertos menos cercanos hasta que tal ruta exista
     k = 0
     while k < 1:
@@ -402,6 +407,7 @@ def Requerimiento3(analyzer,origen,destino):
     lt.addLast(resultado,dt_o)
     lt.addLast(resultado,dt_d)
     return resultado
+
 
 #======================================================================
 # Requerimiento 4
@@ -498,7 +504,7 @@ def comparaLista(el1,el2):
 
 def Requerimiento5(analyzer,aeropuerto):
     grafo = analyzer['red']
-    iatas = gr.adjacents(grafo,aeropuerto)
+    iatas = gr.adjacents(grafo, aeropuerto)
     aeropuertos = analyzer['aeropuertos']
     resultado = lt.newList()
     lt.addLast(resultado,lt.size(iatas))

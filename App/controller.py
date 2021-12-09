@@ -50,16 +50,19 @@ def loadData(analyzer):
     estructura de datos
     """
     primeroAero,ultimoAero=loadAirports(analyzer)
-    loadRoutes(analyzer)
     primeroCiudad,UltimoCiudad=loadCities(analyzer)
     loadRoutesND(analyzer)
+    loadAirports(analyzer)
+    loadRoutes(analyzer)
+    loadCities(analyzer)
+
     return analyzer,primeroAero,ultimoAero,primeroCiudad,UltimoCiudad
 
 def loadAirports(catalog):
     """
     Carga los aeropuertos.
     """
-    booksfile = cf.data_dir + 'Skylines/airports-utf8-small.csv'
+    booksfile = cf.data_dir + 'Skylines/airports-utf8-large.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     x=0
     primera=""
@@ -75,11 +78,10 @@ def loadRoutes(catalog):
     """
     Carga las rutas.
     """
-    booksfile = cf.data_dir + 'Skylines/routes-utf8-small.csv'
+    booksfile = cf.data_dir + 'Skylines/routes-utf8-large.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     for route in input_file:
-        primero=model.addRoute(catalog, route)
-    return
+        model.addRoute(catalog, route)
     
     
 
@@ -87,7 +89,7 @@ def loadCities(analyzer):
     """
     Carga las ciudades
     """
-    booksfile = cf.data_dir +'Skylines/worldcities.csv'
+    booksfile = cf.data_dir +'Skylines/worldcities-utf8.csv'
     input_file = csv.DictReader(open(booksfile, encoding='utf-8'))
     x=0
     primero=""
@@ -108,23 +110,7 @@ def loadRoutesND(catalog):
     for route in input_file:
         model.addRouteND(catalog, route)
 
-def loadGreen(analyzer, servicesfile):
-    """
-    Carga las rutas bien hecho.
-    """
-    servicesfile = cf.data_dir + servicesfile
-    input_file = csv.DictReader(open(servicesfile, encoding="utf-8"),
-                                delimiter=",")
-    lastflight = None
-    for flight in input_file:
-        if lastflight is not None:
-            sameservice = lastflight['Airline'] == flight['Airline']
-            samedirection = lastflight['Destination'] == flight['Destination']
-            samebusStop = lastflight['Departure'] == flight['Departure']
-            if sameservice and samedirection and not samebusStop:
-                model.addAirportConnection(analyzer, lastflight, flight)
-        lastflight = flight
-    return analyzer
+
 def contar_ciudades(map):
     return model.contar_ciudades(map)
 

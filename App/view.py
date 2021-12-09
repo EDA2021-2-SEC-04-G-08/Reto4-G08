@@ -69,11 +69,10 @@ analyzer = None
 def printDataReq1(datos):
     size = lt.size(datos)
     if size>0:
-        tabla=pt()
-        tabla.field_names=["Name","City","Country","IATA","Connections","Inbound","Outbound"]
-        for tupla in lt.iterator(datos):
-            tabla.add_row([tupla[0]["Name"],tupla[0]["City"],tupla[0]["Country"],tupla[0]["IATA"],str(tupla[3]),str(tupla[1]),str(tupla[2])])
-        print(tabla)
+        for dato in lt.iterator(datos):
+            if dato is not None:
+                print('IATA: ' + dato['IATA'] + ', Nombre: ' + dato['Name']
+                     + ', Ciudad: ' + dato['City'] + ', Pais: ' + dato['Country']) 
     else:   
         print ("No se encontraron datos")
 
@@ -94,6 +93,7 @@ def printFirst(analyzer, indice):
         valor = lt.removeLast(valor)
         print("Nombre: " + valor["city_ascii"] + " Latitud: " + valor["lat"] + " Longitud: " + valor["lng"] 
                                                                     + " Población: " + valor["population"])
+                                                                    
 def PrintCargaDatos(analyzer,primeroAero,ultimoAero,primeroCiudad,UltimoCiudad):
     print("-" * 50)
     print("Información Grafo Dirigido")
@@ -166,7 +166,9 @@ def Requerimiento3(analyzer,origen,destino):
     i = 0
     while i < tamano:
         path = st.pop(camino)
-        print(str(path))
+        print('De: ' + str(path['vertexA']) + 'A: ' + str(path['vertexB']))
+        print(str(path['weight']) + ' km')
+        print('')
         lt.addLast(d_aerea,float(path['weight']))
         i += 1
     total_a = 0
@@ -212,11 +214,6 @@ def Requerimiento4(analyzer):
         print("Sobró una cantidad de:",dicts["sobro"]/1.60,"millas")
     else:
         print("Se alcanzaron todas los vértices")
-    
-    
-
-    
-    
     
 
 def Requerimiento5(analyzer,aeropuerto):
@@ -287,6 +284,7 @@ def thread_cycle():
             stop_time = time.process_time()
             elapsed_time_mseg = (stop_time - start_time)*1000
             print("Tiempo de ejecución: " + str(elapsed_time_mseg))
+        
             
         else:
             sys.exit(0)
